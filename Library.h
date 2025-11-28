@@ -22,6 +22,11 @@ public:
     void addAuthor(Author* author);
     Book* findBookByTitle(const std::string& title);
     bool lendBook(const std::string& title, Reader* reader);
+    
+    // Method overloading: same name, different parameters
+    std::vector<Book*> search(const std::string& title);        // Search by title
+    std::vector<Book*> search(Author* author);                  // Search by author
+    std::vector<Book*> search(bool availableOnly);              // Search by availability
 };
 
 #endif

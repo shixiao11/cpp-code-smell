@@ -39,3 +39,37 @@ bool Library::lendBook(const std::string& title, Reader* reader) {
     return false;
 }
 
+// Method overloading implementation
+// Overload 1: Search by title
+std::vector<Book*> Library::search(const std::string& title) {
+    std::vector<Book*> result;
+    for (auto book : books) {
+        if (book->getTitle().find(title) != std::string::npos) {
+            result.push_back(book);
+        }
+    }
+    return result;
+}
+
+// Overload 2: Search by author
+std::vector<Book*> Library::search(Author* author) {
+    std::vector<Book*> result;
+    for (auto book : books) {
+        if (book->getAuthor() == author) {
+            result.push_back(book);
+        }
+    }
+    return result;
+}
+
+// Overload 3: Search by availability
+std::vector<Book*> Library::search(bool availableOnly) {
+    std::vector<Book*> result;
+    for (auto book : books) {
+        if (!availableOnly || book->isAvailable()) {
+            result.push_back(book);
+        }
+    }
+    return result;
+}
+
