@@ -20,7 +20,8 @@ void Library::addAuthor(Author* author) {
     authors.push_back(author);
 }
 
-Book* Library::findBookByTitle(const std::string& title) {
+// CODE SMELL 4: Method renamed from findBookByTitle to locateBookUsingTitle
+Book* Library::locateBookUsingTitle(const std::string& title) {
     for (auto book : books) {
         if (book->getTitle() == title) {
             return book;
@@ -29,8 +30,14 @@ Book* Library::findBookByTitle(const std::string& title) {
     return nullptr;
 }
 
+// CODE SMELL 2: Memory leak - allocating temporary buffer without freeing it
 bool Library::lendBook(const std::string& title, Reader* reader) {
-    Book* book = findBookByTitle(title);
+    // Memory leak: allocating heap memory for log message but never freeing it
+    char* logMessage = new char[256];
+    sprintf(logMessage, "Attempting to lend book: %s", title.c_str());
+    // logMessage is never deleted - MEMORY LEAK
+    
+    Book* book = locateBookUsingTitle(title);
     if (book != nullptr && book->isAvailable()) {
         book->setAvailable(false);
         reader->borrowBook(book);
@@ -41,9 +48,11 @@ bool Library::lendBook(const std::string& title, Reader* reader) {
 
 // Method overloading implementation
 // Overload 1: Search by title
+// CODE SMELL 1: Potential null pointer dereference - accessing book without null check
 std::vector<Book*> Library::search(const std::string& title) {
     std::vector<Book*> result;
     for (auto book : books) {
+        // Dangerous: book could be nullptr but we dereference it directly
         if (book->getTitle().find(title) != std::string::npos) {
             result.push_back(book);
         }
@@ -52,24 +61,27 @@ std::vector<Book*> Library::search(const std::string& title) {
 }
 
 // Overload 2: Search by author
+// CODE SMELL 1: Potential null pointer dereference - using author without null check
 std::vector<Book*> Library::search(Author* author) {
     std::vector<Book*> result;
+    // Dangerous: author could be nullptr and we dereference it in comparison
+    // Also dereferencing book->getAuthor() without checking if book is null
     for (auto book : books) {
-        if (book->getAuthor() == author) {
+        if (book->getAuthor() == author && book->getAuthor()->getName() == author->getName()) {
             result.push_back(book);
         }
     }
     return result;
 }
 
-// Overload 3: Search by availability
+// CODE SMELL 3: Poor variable naming - confusing variable names that hurt readability
 std::vector<Book*> Library::search(bool availableOnly) {
-    std::vector<Book*> result;
-    for (auto book : books) {
-        if (!availableOnly || book->isAvailable()) {
-            result.push_back(book);
+    std::vector<Book*> x;  // renamed from 'result' to 'x' - unclear name
+    for (auto y : books) {  // renamed from 'book' to 'y' - unclear name
+        if (!availableOnly || y->isAvailable()) {
+            x.push_back(y);
         }
     }
-    return result;
+    return x;
 }
 

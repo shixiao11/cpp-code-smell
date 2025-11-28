@@ -1,0 +1,115 @@
+C++ CODE SMELL TEST PROJECT - SUMMARY
+======================================
+
+This document summarizes all the code smells intentionally introduced for testing code scanning tools.
+
+FILE CHANGES:
+-------------
+
+1. Library.cpp (Modified)
+2. Library.h (Modified)
+3. BookManager.cpp (New file - CODE SMELL 5)
+4. BookManager.h (New file - CODE SMELL 5)
+
+
+DETAILED CODE SMELLS:
+---------------------
+
+CODE SMELL #1: NULL POINTER DEREFERENCE (2 Overloaded Methods)
+Location: Library.cpp, lines 52-74
+Severity: HIGH - Can cause crashes
+
+Changes made:
+a) search(const std::string& title) - Line 56
+   - Dereferences 'book' pointer without null check
+   - book->getTitle() called without verifying book != nullptr
+
+b) search(Author* author) - Line 70
+   - Dereferences 'author' parameter without null check (author->getName())
+   - Dereferences book->getAuthor() without null check
+   - Multiple pointer dereferences without safety checks
+   
+Impact: If nullptr is passed or stored in the books vector, this will cause segmentation fault.
+
+
+CODE SMELL #2: MEMORY LEAK
+Location: Library.cpp, lines 34-47, specifically line 36
+Severity: HIGH - Memory leak
+
+Changes made:
+- lendBook() method allocates heap memory: char* logMessage = new char[256]
+- Uses sprintf() to write to the buffer
+- Never calls delete[] logMessage
+- Memory is leaked every time lendBook() is called
+
+Impact: Each call to lendBook() leaks 256 bytes. In a long-running application, this will gradually consume all available memory.
+
+
+CODE SMELL #3: POOR VARIABLE NAMING (Variable Renaming)
+Location: Library.cpp, lines 78-86
+Severity: MEDIUM - Readability issue
+
+Changes made in search(bool availableOnly):
+- Renamed 'result' to 'x' (unclear, single-letter name)
+- Renamed 'book' to 'y' (unclear, single-letter name)
+- Logic remains identical, only naming changed
+
+Impact: Code is harder to understand and maintain. Violates clean code principles.
+
+
+CODE SMELL #4: METHOD RENAMING
+Location: Library.cpp line 24, Library.h line 23
+Severity: LOW - Inconsistent naming
+
+Changes made:
+- Renamed findBookByTitle() to locateBookUsingTitle()
+- Updated all internal calls in Library.cpp
+- Updated declaration in Library.h
+
+Impact: Method name is unnecessarily verbose. Inconsistent with existing naming conventions in the codebase.
+
+
+CODE SMELL #5: NEW FILE WITH DEPENDENCIES
+Location: BookManager.h and BookManager.cpp (New files)
+Severity: N/A - Demonstrates integration
+
+Created new class that:
+- References existing Library methods
+- Calls the renamed method locateBookUsingTitle()
+- Calls search() overloads with null pointer issues
+- Calls search(bool) with poor variable naming
+
+Methods:
+- displayBookInfo() - Uses locateBookUsingTitle()
+- searchAndDisplay() - Uses search(string) with null pointer issue
+- countAvailableBooks() - Uses search(bool) with poor naming
+
+
+TESTING RECOMMENDATIONS:
+------------------------
+
+Your code scanner should be able to detect:
+
+1. Null pointer dereferences in overloaded methods
+   - Check: Lines 56, 70 in Library.cpp
+   
+2. Memory leaks from unfreed heap allocations
+   - Check: Line 36 in Library.cpp (new without delete)
+   
+3. Poor naming conventions
+   - Check: Lines 79-80 in Library.cpp (single-letter variables)
+   
+4. Method signature changes that might break calling code
+   - Check: findBookByTitle -> locateBookUsingTitle rename
+   
+5. New files that depend on problematic code
+   - Check: BookManager.cpp calls to all the above issues
+
+
+COMPILATION:
+-----------
+Note: The code should still compile without errors. These are runtime/quality issues, not compilation errors.
+Use: g++ -std=c++11 -o library_test main.cpp Book.cpp Author.cpp Library.cpp Reader.cpp BookManager.cpp
+
+WARNING: Do not run this code in production! It contains intentional bugs for testing purposes only.
+

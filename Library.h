@@ -20,7 +20,7 @@ public:
     
     void addBook(Book* book);
     void addAuthor(Author* author);
-    Book* findBookByTitle(const std::string& title);
+    Book* locateBookUsingTitle(const std::string& title);  // Renamed from findBookByTitle
     bool lendBook(const std::string& title, Reader* reader);
     
     // Method overloading: same name, different parameters
